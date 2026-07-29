@@ -1,0 +1,49 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Vacaciones escolares",
+        "description": "Elige el país cuyas vacaciones escolares quieres seguir.",
+        "data": {
+          "country": "País"
+        }
+      },
+      "subdivision": {
+        "title": "Estado / región",
+        "description": "Elige el estado o la región (las vacaciones varían por región).",
+        "data": {
+          "subdivision": "Estado / región"
+        }
+      }
+    },
+    "abort": {
+      "cannot_connect": "No se pudo contactar con el servicio de vacaciones. Inténtalo más tarde.",
+      "already_configured": "Este país/región ya está configurado."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opciones de vacaciones escolares",
+        "data": {
+          "update_hours": "Intervalo de actualización (horas)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "today": {
+        "name": "Vacaciones escolares hoy"
+      },
+      "tomorrow": {
+        "name": "Vacaciones escolares mañana"
+      }
+    },
+    "sensor": {
+      "next_holiday": {
+        "name": "Próximas vacaciones escolares"
+      }
+    }
+  }
+}

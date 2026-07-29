@@ -1,0 +1,37 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "School Holidays",
+        "description": "Choose the country whose school holidays you want to track.",
+        "data": { "country": "Country" }
+      },
+      "subdivision": {
+        "title": "State / region",
+        "description": "Choose the state or region (school holidays differ by region).",
+        "data": { "subdivision": "State / region" }
+      }
+    },
+    "abort": {
+      "cannot_connect": "Could not reach the school-holidays service. Please try again later.",
+      "already_configured": "This country/region is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "School Holidays options",
+        "data": { "update_hours": "Update interval (hours)" }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "today": { "name": "School holidays today" },
+      "tomorrow": { "name": "School holidays tomorrow" }
+    },
+    "sensor": {
+      "next_holiday": { "name": "Next school holiday" }
+    }
+  }
+}

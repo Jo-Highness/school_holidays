@@ -1,0 +1,71 @@
+"""Thin async client for the free openholidaysapi.org (no API key)."""
+from __future__ import annotations
+
+import asyncio
+
+from aiohttp import ClientSession
+
+BASE = "https://openholidaysapi.org"
+TIMEOUT = 20
+
+
+class OpenHolidaysError(Exception):
+    """Raised when the API cannot be reached or returns an error."""
+
+
+async def _get(session: ClientSession, path: str, params: dict) -> list[dict]:
+    url = f"{BASE}/{path}"
+    try:
+        async with asyncio.timeout(TIMEOUT):
+            resp = await session.get(url, params=params,
+                                     headers={"Accept": "application/json"})
+            if resp.status != 200:
+                raise OpenHolidaysError(f"{path} -> HTTP {resp.status}")
+            return await resp.json()
+    except OpenHolidaysError:
+        raise
+    except Exception as err:  # noqa: BLE001 - normalise everything
+        raise OpenHolidaysError(f"{path} request failed: {err}") from err
+
+
+def _localized(names: list[dict], language: str) -> str:
+    for n in names or []:
+        if str(n.get("language", "")).upper() == language.upper():
+            return n.get("text", "")
+    return (names or [{}])[0].get("text", "") if names else ""
+
+
+async def async_get_countries(session: ClientSession, language: str = "EN") -> list[dict]:
+    """Return [{'code': ISO, 'name': localized}] for the country picker."""
+    data = await _get(session, "Countries", {"languageIsoCode": language.upper()})
+    out = [{"code": c.get("isoCode"), "name": _localized(c.get("name"), language)}
+           for c in data if c.get("isoCode")]
+    out.sort(key=lambda c: c["name"])
+    return out
+
+
+async def async_get_subdivisions(session: ClientSession, country: str,
+                                 language: str = "EN") -> list[dict]:
+    """Return [{'code': e.g. DE-HE, 'name': localized}] for a country."""
+    data = await _get(session, "Subdivisions",
+                      {"countryIsoCode": country.upper(),
+                       "languageIsoCode": language.upper()})
+    out = [{"code": s.get("code"), "name": _localized(s.get("name"), language)}
+           for s in data if s.get("code")]
+    out.sort(key=lambda s: s["name"])
+    return out
+
+
+async def async_get_school_holidays(session: ClientSession, country: str,
+                                    subdivision: str | None, valid_from: str,
+                                    valid_to: str, language: str = "EN") -> list[dict]:
+    """Return the raw SchoolHolidays list for the given window."""
+    params = {
+        "countryIsoCode": country.upper(),
+        "languageIsoCode": language.upper(),
+        "validFrom": valid_from,
+        "validTo": valid_to,
+    }
+    if subdivision:
+        params["subdivisionCode"] = subdivision
+    return await _get(session, "SchoolHolidays", params)

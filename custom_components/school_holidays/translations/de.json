@@ -1,0 +1,49 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Schulferien",
+        "description": "Wähle das Land, dessen Schulferien du verfolgen möchtest.",
+        "data": {
+          "country": "Land"
+        }
+      },
+      "subdivision": {
+        "title": "Bundesland / Region",
+        "description": "Wähle das Bundesland bzw. die Region (Schulferien unterscheiden sich regional).",
+        "data": {
+          "subdivision": "Bundesland / Region"
+        }
+      }
+    },
+    "abort": {
+      "cannot_connect": "Der Schulferien-Dienst ist nicht erreichbar. Bitte später erneut versuchen.",
+      "already_configured": "Dieses Land/diese Region ist bereits konfiguriert."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Schulferien-Optionen",
+        "data": {
+          "update_hours": "Aktualisierungsintervall (Stunden)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "today": {
+        "name": "Schulferien heute"
+      },
+      "tomorrow": {
+        "name": "Schulferien morgen"
+      }
+    },
+    "sensor": {
+      "next_holiday": {
+        "name": "Nächste Schulferien"
+      }
+    }
+  }
+}
