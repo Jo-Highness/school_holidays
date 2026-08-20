@@ -1,0 +1,76 @@
+name: Bug report
+description: Report a problem with the School Holidays integration
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report! Please fill in as much
+        as you can so we can reproduce the issue quickly.
+  - type: input
+    id: ha-version
+    attributes:
+      label: Home Assistant version
+      description: "Settings → About (e.g. 2026.8.0)"
+      placeholder: "2026.8.0"
+    validations:
+      required: true
+  - type: input
+    id: integration-version
+    attributes:
+      label: Integration version
+      description: "Version of School Holidays (see HACS or manifest.json)"
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: input
+    id: country-region
+    attributes:
+      label: Country / region
+      description: "The country and state/region you configured"
+      placeholder: "Germany / Hesse (DE / DE-HE)"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+      description: What did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: What actually happened? Include steps to reproduce if possible.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Debug logs
+      description: |
+        Enable debug logging, reproduce the problem, then paste the relevant log
+        lines here. Add this to your `configuration.yaml`, restart, and reproduce:
+
+        ```yaml
+        logger:
+          default: info
+          logs:
+            custom_components.school_holidays: debug
+        ```
+      render: text
+    validations:
+      required: false
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I am running the latest version of the integration.
+          required: true
+        - label: I searched existing issues and did not find a duplicate.
+          required: true
+        - label: I included debug logs (or none were produced).
+          required: false

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Home Assistant Community Forum
+    url: https://community.home-assistant.io/
+    about: General Home Assistant questions and automation help.
+  - name: openholidaysapi.org
+    url: https://www.openholidaysapi.org/
+    about: Questions about the underlying holiday data source (data accuracy, coverage).

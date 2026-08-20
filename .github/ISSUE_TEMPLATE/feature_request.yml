@@ -1,0 +1,39 @@
+name: Feature request
+description: Suggest an idea or improvement for School Holidays
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting an improvement! Please describe the problem you are
+        trying to solve, not only the solution you have in mind.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+      description: What are you trying to achieve? What is missing or hard today?
+      placeholder: "I want to ... but currently ..."
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Desired solution
+      description: Describe the behaviour or feature you would like to see.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any workarounds or other approaches you have thought about.
+    validations:
+      required: false
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Anything else that helps understand the request (country/region, use case, screenshots).
+    validations:
+      required: false
