@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_change
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from . import api, logic
@@ -102,10 +102,14 @@ class SchoolHolidaysCoordinator(DataUpdateCoordinator[dict]):
             )
             self._periods = logic.parse_periods(raw, self.language)
         except api.OpenHolidaysError as err:
-            # Robustness: keep the last known periods instead of going
-            # unavailable, so automations keep working through API hiccups.
+            # Robustness: once we have data, keep the last known periods instead of
+            # going unavailable, so automations keep working through API hiccups.
             if self._periods:
                 _LOGGER.warning("School holidays API failed (%s); keeping last data", err)
             else:
-                _LOGGER.error("School holidays API failed and no cached data: %s", err)
+                # No cached data yet (e.g. the very first refresh): surface the
+                # failure so Home Assistant retries the setup instead of silently
+                # creating empty sensors. On the first refresh this becomes
+                # ConfigEntryNotReady automatically.
+                raise UpdateFailed(f"School holidays API unavailable: {err}") from err
         return self._derive()
