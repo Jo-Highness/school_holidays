@@ -1,4 +1,5 @@
 """Sensor: the next (or current) school holiday."""
+
 from __future__ import annotations
 
 from datetime import date, datetime

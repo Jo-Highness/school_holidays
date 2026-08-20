@@ -1,4 +1,5 @@
 """Constants for the School Holidays integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -25,4 +26,4 @@ DATA_PERIODS = "periods"
 DATA_TODAY = "today"
 DATA_TOMORROW = "tomorrow"
 DATA_CURRENT = "current"  # dict name/start/end or None
-DATA_NEXT = "next"        # dict name/start/end/days_until or None
+DATA_NEXT = "next"  # dict name/start/end/days_until or None

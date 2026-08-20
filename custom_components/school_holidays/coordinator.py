@@ -1,8 +1,9 @@
 """DataUpdateCoordinator for School Holidays."""
+
 from __future__ import annotations
 
-import logging
 from datetime import timedelta
+import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -11,8 +12,7 @@ from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from . import api
-from . import logic
+from . import api, logic
 from .const import (
     CONF_COUNTRY,
     CONF_LANGUAGE,
@@ -49,7 +49,9 @@ class SchoolHolidaysCoordinator(DataUpdateCoordinator[dict]):
         self.language = opts.get(CONF_LANGUAGE, DEFAULT_LANGUAGE)
         hours = int(opts.get(CONF_UPDATE_HOURS, DEFAULT_UPDATE_HOURS))
         super().__init__(
-            hass, _LOGGER, name=DOMAIN,
+            hass,
+            _LOGGER,
+            name=DOMAIN,
             update_interval=timedelta(hours=max(1, hours)),
         )
         self._periods: list[logic.Period] = []
@@ -60,7 +62,8 @@ class SchoolHolidaysCoordinator(DataUpdateCoordinator[dict]):
         # Recompute today/tomorrow at local midnight WITHOUT a network call, so
         # the sensors flip exactly at the day boundary even if the API is down.
         self._unsub_midnight = async_track_time_change(
-            self.hass, self._handle_midnight, hour=0, minute=0, second=5)
+            self.hass, self._handle_midnight, hour=0, minute=0, second=5
+        )
 
     async def async_shutdown(self) -> None:  # type: ignore[override]
         if self._unsub_midnight:
@@ -95,8 +98,8 @@ class SchoolHolidaysCoordinator(DataUpdateCoordinator[dict]):
         session = async_get_clientsession(self.hass)
         try:
             raw = await api.async_get_school_holidays(
-                session, self.country, self.subdivision, valid_from, valid_to,
-                self.language)
+                session, self.country, self.subdivision, valid_from, valid_to, self.language
+            )
             self._periods = logic.parse_periods(raw, self.language)
         except api.OpenHolidaysError as err:
             # Robustness: keep the last known periods instead of going

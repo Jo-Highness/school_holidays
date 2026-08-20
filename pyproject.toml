@@ -1,0 +1,29 @@
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["custom_components", "tests"]
+
+[tool.ruff.lint]
+select = [
+  "E",    # pycodestyle errors
+  "W",    # pycodestyle warnings
+  "F",    # pyflakes
+  "I",    # isort
+  "UP",   # pyupgrade
+  "B",    # flake8-bugbear
+  "SIM",  # flake8-simplify
+  "ASYNC",# flake8-async
+  "C4",   # flake8-comprehensions
+  "RUF",  # ruff-specific
+]
+ignore = [
+  "B008",  # function calls in argument defaults (common with voluptuous/selectors)
+]
+
+[tool.ruff.lint.isort]
+force-sort-within-sections = true
+combine-as-imports = true
+known-first-party = ["custom_components"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]

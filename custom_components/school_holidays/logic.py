@@ -1,4 +1,5 @@
 """Pure school-holiday date logic (no Home Assistant imports, fully testable)."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

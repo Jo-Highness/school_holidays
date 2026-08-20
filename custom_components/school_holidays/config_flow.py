@@ -1,9 +1,9 @@
 """Config & options flow for School Holidays (pick country + subdivision)."""
+
 from __future__ import annotations
 
 from typing import Any
 
-import voluptuous as vol
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -13,6 +13,7 @@ from homeassistant.config_entries import (
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import voluptuous as vol
 
 from . import api
 from .const import (
@@ -31,9 +32,12 @@ from .const import (
 def _select(options: list[dict[str, str]]) -> selector.SelectSelector:
     return selector.SelectSelector(
         selector.SelectSelectorConfig(
-            options=[selector.SelectOptionDict(value=o["value"], label=o["label"])
-                     for o in options],
-            mode=selector.SelectSelectorMode.DROPDOWN))
+            options=[
+                selector.SelectOptionDict(value=o["value"], label=o["label"]) for o in options
+            ],
+            mode=selector.SelectSelectorMode.DROPDOWN,
+        )
+    )
 
 
 class SchoolHolidaysConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -62,21 +66,25 @@ class SchoolHolidaysConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._country = user_input[CONF_COUNTRY]
             self._country_name = next(
-                (c["name"] for c in self._countries if c["code"] == self._country),
-                self._country)
+                (c["name"] for c in self._countries if c["code"] == self._country), self._country
+            )
             return await self.async_step_subdivision()
         opts = [{"value": c["code"], "label": c["name"]} for c in self._countries]
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({vol.Required(CONF_COUNTRY): _select(opts)}),
-            errors=errors)
+            errors=errors,
+        )
 
-    async def async_step_subdivision(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+    async def async_step_subdivision(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         if not self._subdivisions:
             try:
                 session = async_get_clientsession(self.hass)
                 self._subdivisions = await api.async_get_subdivisions(
-                    session, self._country, self._language())
+                    session, self._country, self._language()
+                )
             except api.OpenHolidaysError:
                 self._subdivisions = []
         # Countries without subdivisions -> configure the whole country directly.
@@ -89,7 +97,8 @@ class SchoolHolidaysConfigFlow(ConfigFlow, domain=DOMAIN):
         opts = [{"value": s["code"], "label": s["name"]} for s in self._subdivisions]
         return self.async_show_form(
             step_id="subdivision",
-            data_schema=vol.Schema({vol.Required(CONF_SUBDIVISION): _select(opts)}))
+            data_schema=vol.Schema({vol.Required(CONF_SUBDIVISION): _select(opts)}),
+        )
 
     async def _create(self, subdivision: str | None, subdivision_name: str) -> ConfigFlowResult:
         unique = f"{self._country}:{subdivision or '-'}"
@@ -104,11 +113,12 @@ class SchoolHolidaysConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_SUBDIVISION: subdivision,
                 CONF_SUBDIVISION_NAME: subdivision_name,
                 CONF_LANGUAGE: self._language(),
-            })
+            },
+        )
 
     @staticmethod
     @callback
-    def async_get_options_flow(entry: ConfigEntry) -> "SchoolHolidaysOptionsFlow":
+    def async_get_options_flow(entry: ConfigEntry) -> SchoolHolidaysOptionsFlow:
         return SchoolHolidaysOptionsFlow(entry)
 
 
@@ -124,12 +134,20 @@ class SchoolHolidaysOptionsFlow(OptionsFlow):
         current = {**self._entry.data, **self._entry.options}
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema({
-                vol.Required(
-                    CONF_UPDATE_HOURS,
-                    default=current.get(CONF_UPDATE_HOURS, DEFAULT_UPDATE_HOURS),
-                ): selector.NumberSelector(
-                    selector.NumberSelectorConfig(min=1, max=168, step=1,
-                                                  unit_of_measurement="h",
-                                                  mode=selector.NumberSelectorMode.BOX)),
-            }))
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_UPDATE_HOURS,
+                        default=current.get(CONF_UPDATE_HOURS, DEFAULT_UPDATE_HOURS),
+                    ): selector.NumberSelector(
+                        selector.NumberSelectorConfig(
+                            min=1,
+                            max=168,
+                            step=1,
+                            unit_of_measurement="h",
+                            mode=selector.NumberSelectorMode.BOX,
+                        )
+                    ),
+                }
+            ),
+        )

@@ -1,8 +1,9 @@
 """Offline unit tests for the pure school-holiday logic (no HA needed)."""
+
+from datetime import date
 import importlib.util
 import pathlib
 import sys
-from datetime import date
 
 _HERE = pathlib.Path(__file__).resolve().parent
 _LOGIC = _HERE.parent / "custom_components" / "school_holidays" / "logic.py"
@@ -13,10 +14,19 @@ _spec.loader.exec_module(logic)
 
 
 RAW = [
-    {"startDate": "2026-06-29", "endDate": "2026-08-07",
-     "name": [{"language": "DE", "text": "Sommerferien"}, {"language": "EN", "text": "Summer break"}]},
-    {"startDate": "2026-10-05", "endDate": "2026-10-17",
-     "name": [{"language": "DE", "text": "Herbstferien"}]},
+    {
+        "startDate": "2026-06-29",
+        "endDate": "2026-08-07",
+        "name": [
+            {"language": "DE", "text": "Sommerferien"},
+            {"language": "EN", "text": "Summer break"},
+        ],
+    },
+    {
+        "startDate": "2026-10-05",
+        "endDate": "2026-10-17",
+        "name": [{"language": "DE", "text": "Herbstferien"}],
+    },
 ]
 
 
@@ -30,7 +40,7 @@ def test_parse_periods_localized():
 
 
 def test_parse_periods_sorted_and_robust():
-    reversed_raw = list(reversed(RAW)) + [{"startDate": "bad", "endDate": "x", "name": []}]
+    reversed_raw = [*reversed(RAW), {"startDate": "bad", "endDate": "x", "name": []}]
     ps = logic.parse_periods(reversed_raw, "DE")
     assert len(ps) == 2  # the invalid one is dropped
     assert ps[0].start < ps[1].start  # sorted ascending
@@ -38,11 +48,11 @@ def test_parse_periods_sorted_and_robust():
 
 def test_is_holiday_within_and_outside():
     ps = logic.parse_periods(RAW, "DE")
-    assert logic.is_holiday(date(2026, 7, 29), ps) is True   # inside summer
-    assert logic.is_holiday(date(2026, 6, 29), ps) is True   # boundary start
-    assert logic.is_holiday(date(2026, 8, 7), ps) is True    # boundary end
-    assert logic.is_holiday(date(2026, 8, 8), ps) is False   # day after
-    assert logic.is_holiday(date(2026, 9, 1), ps) is False   # gap
+    assert logic.is_holiday(date(2026, 7, 29), ps) is True  # inside summer
+    assert logic.is_holiday(date(2026, 6, 29), ps) is True  # boundary start
+    assert logic.is_holiday(date(2026, 8, 7), ps) is True  # boundary end
+    assert logic.is_holiday(date(2026, 8, 8), ps) is False  # day after
+    assert logic.is_holiday(date(2026, 9, 1), ps) is False  # gap
 
 
 def test_period_on():
@@ -64,9 +74,9 @@ def test_current_or_next():
 def test_days_until():
     ps = logic.parse_periods(RAW, "DE")
     autumn = ps[1]
-    assert logic.days_until(date(2026, 9, 1), autumn) == 34   # until autumn start
+    assert logic.days_until(date(2026, 9, 1), autumn) == 34  # until autumn start
     summer = ps[0]
-    assert logic.days_until(date(2026, 7, 1), summer) == 0    # already running
+    assert logic.days_until(date(2026, 7, 1), summer) == 0  # already running
 
 
 def test_empty():

@@ -1,4 +1,5 @@
 """Binary sensors: school holidays today / tomorrow."""
+
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
@@ -17,10 +18,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     coordinator: SchoolHolidaysCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([
-        HolidayTodayBinarySensor(coordinator),
-        HolidayTomorrowBinarySensor(coordinator),
-    ])
+    async_add_entities(
+        [
+            HolidayTodayBinarySensor(coordinator),
+            HolidayTomorrowBinarySensor(coordinator),
+        ]
+    )
 
 
 class _HolidayBinary(SchoolHolidaysEntity, BinarySensorEntity):
