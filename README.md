@@ -52,20 +52,19 @@ school-holiday calendar per region.
 
 ## Screenshots
 
-> The images below are **placeholders** — see [`images/README.md`](images/README.md) for the
-> list of screenshots still to be supplied.
+> Captured from a demo Home Assistant with fictional data.
 
 **Config flow — pick country, then region**
 
-![Config flow (placeholder — see images/README.md)](images/config-flow.png)
+![Config flow: pick the country whose school holidays to track](images/config-flow.png)
 
 **Entities on the device page**
 
-![Entities (placeholder — see images/README.md)](images/entities.png)
+![The integration's entities: today, tomorrow and next school holiday](images/entities.png)
 
 **Example dashboard card**
 
-![Dashboard (placeholder — see images/README.md)](images/dashboard.png)
+![Entities card showing today/tomorrow/next school holiday](images/dashboard.png)
 
 ## Installation
 
