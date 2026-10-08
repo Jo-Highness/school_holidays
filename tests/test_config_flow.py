@@ -103,3 +103,36 @@ async def test_options_flow_update_hours(hass: HomeAssistant, config_entry) -> N
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options[CONF_UPDATE_HOURS] == 24
+
+
+async def test_flow_subdivisions_unreachable_aborts(hass: HomeAssistant) -> None:
+    """A failing subdivision lookup must abort, not silently pick the whole country."""
+    with (
+        patch(f"{API}.async_get_countries", return_value=COUNTRIES),
+        patch(f"{API}.async_get_subdivisions", side_effect=api.OpenHolidaysError("boom")),
+    ):
+        result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_COUNTRY: "DE"}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+    assert not hass.config_entries.async_entries(DOMAIN)
+
+
+async def test_flow_regional_language_tag(hass: HomeAssistant) -> None:
+    """A regional HA language like 'de-CH' is reduced to the ISO 639-1 code."""
+    hass.config.language = "de-CH"
+    with (
+        patch(f"{API}.async_get_countries", return_value=COUNTRIES) as countries,
+        patch(f"{API}.async_get_subdivisions", return_value=[]),
+    ):
+        result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_COUNTRY: "DE"}
+        )
+
+    assert countries.call_args.args[1] == "DE"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"]["language"] == "DE"

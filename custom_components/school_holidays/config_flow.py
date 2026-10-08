@@ -52,7 +52,8 @@ class SchoolHolidaysConfigFlow(ConfigFlow, domain=DOMAIN):
         self._subdivisions: list[dict] = []
 
     def _language(self) -> str:
-        lang = (self.hass.config.language or DEFAULT_LANGUAGE).upper()
+        # HA may use regional tags like "en-GB" / "pt-BR"; the API wants ISO 639-1.
+        lang = (self.hass.config.language or DEFAULT_LANGUAGE).split("-")[0].upper()
         return lang if len(lang) == 2 else DEFAULT_LANGUAGE
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
@@ -86,7 +87,10 @@ class SchoolHolidaysConfigFlow(ConfigFlow, domain=DOMAIN):
                     session, self._country, self._language()
                 )
             except api.OpenHolidaysError:
-                self._subdivisions = []
+                # Do NOT fall through to "whole country": for countries with
+                # regional holidays (e.g. DE) that would silently mix every
+                # region's holidays into one entry.
+                return self.async_abort(reason="cannot_connect")
         # Countries without subdivisions -> configure the whole country directly.
         if not self._subdivisions:
             return await self._create(None, "")

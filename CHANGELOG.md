@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Config flow: if the subdivision list cannot be fetched, the flow now aborts with
+  `cannot_connect` instead of silently creating a whole-country entry (which mixes all
+  regions' holidays, e.g. for Germany).
+- API client: HTTP responses are now always released back to Home Assistant's shared
+  session (context manager), and a non-list JSON payload is treated as an API error.
+- Regional Home Assistant languages (e.g. `de-CH`, `en-GB`) are reduced to their
+  ISO 639-1 code instead of falling back to English.
+
 ## [1.0.1] - 2026-08-21
 
 ### Added

@@ -17,15 +17,22 @@ class OpenHolidaysError(Exception):
 async def _get(session: ClientSession, path: str, params: dict) -> list[dict]:
     url = f"{BASE}/{path}"
     try:
-        async with asyncio.timeout(TIMEOUT):
-            resp = await session.get(url, params=params, headers={"Accept": "application/json"})
+        async with (
+            asyncio.timeout(TIMEOUT),
+            session.get(url, params=params, headers={"Accept": "application/json"}) as resp,
+        ):
+            # The context manager releases the connection back to HA's shared
+            # session pool on every path (including non-200 responses).
             if resp.status != 200:
                 raise OpenHolidaysError(f"{path} -> HTTP {resp.status}")
-            return await resp.json()
+            data = await resp.json()
     except OpenHolidaysError:
         raise
     except Exception as err:
         raise OpenHolidaysError(f"{path} request failed: {err}") from err
+    if not isinstance(data, list):
+        raise OpenHolidaysError(f"{path} returned an unexpected payload")
+    return data
 
 
 def _localized(names: list[dict], language: str) -> str:
