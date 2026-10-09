@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-10-09
+
 ### Fixed
 
 - Config flow: if the subdivision list cannot be fetched, the flow now aborts with
@@ -51,5 +53,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   when the API is briefly unreachable.
 - Translations for English, German, Spanish and French.
 
-[Unreleased]: https://github.com/Jo-Highness/school_holidays/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/Jo-Highness/school_holidays/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/Jo-Highness/school_holidays/compare/v1.0.1...v1.0.2
 [1.0.0]: https://github.com/Jo-Highness/school_holidays/releases/tag/v1.0.0
