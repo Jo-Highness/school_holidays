@@ -4,34 +4,80 @@
       "user": {
         "title": "School Holidays",
         "description": "Choose the country whose school holidays you want to track.",
-        "data": { "country": "Country" }
+        "data": {
+          "country": "Country"
+        },
+        "data_description": {
+          "country": "The list comes live from openholidaysapi.org."
+        }
       },
       "subdivision": {
         "title": "State / region",
         "description": "Choose the state or region (school holidays differ by region).",
-        "data": { "subdivision": "State / region" }
+        "data": {
+          "subdivision": "State / region"
+        },
+        "data_description": {
+          "subdivision": "School holiday dates are published per region, e.g. per German federal state."
+        }
       }
     },
     "abort": {
       "cannot_connect": "Could not reach the school-holidays service. Please try again later.",
-      "already_configured": "This country/region is already configured."
+      "already_configured": "This country/region is already configured.",
+      "reconfigure_successful": "The country/region was changed successfully."
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "School Holidays options",
-        "data": { "update_hours": "Update interval (hours)" }
+        "description": "Adjust how often holiday data is fetched and in which language holiday names are shown. Today/tomorrow switch locally at midnight regardless of the interval.",
+        "data": {
+          "update_hours": "Update interval (hours)",
+          "language": "Language of holiday names"
+        },
+        "data_description": {
+          "update_hours": "How often openholidaysapi.org is queried (1-168 hours). Holiday dates rarely change, so 24 hours is plenty.",
+          "language": "\"Follow Home Assistant language\" uses your Home Assistant language. You can also pick or type a two-letter ISO 639-1 code (e.g. DE). If the API has no name in that language, another available name is shown."
+        }
       }
+    }
+  },
+  "selector": {
+    "language": {
+      "options": {
+        "auto": "Follow Home Assistant language"
+      }
+    }
+  },
+  "device": {
+    "school_holidays": {
+      "name": "School Holidays"
     }
   },
   "entity": {
     "binary_sensor": {
-      "today": { "name": "School holidays today" },
-      "tomorrow": { "name": "School holidays tomorrow" }
+      "today": {
+        "name": "School holidays today"
+      },
+      "tomorrow": {
+        "name": "School holidays tomorrow"
+      }
     },
     "sensor": {
-      "next_holiday": { "name": "Next school holiday" }
+      "next_holiday": {
+        "name": "Next school holiday"
+      },
+      "last_successful_update": {
+        "name": "Last successful update"
+      }
+    }
+  },
+  "issues": {
+    "stale_data": {
+      "title": "School holiday data for {region} is outdated",
+      "description": "The school holiday data for **{region}** could not be refreshed for {days} days (last successful update: {last_update}). The sensors keep working with the cached dates, but changes published since then are missing.\n\nCheck that Home Assistant can reach `openholidaysapi.org`. This message disappears automatically after the next successful update."
     }
   }
 }

@@ -6,6 +6,9 @@
         "description": "Wähle das Land, dessen Schulferien du verfolgen möchtest.",
         "data": {
           "country": "Land"
+        },
+        "data_description": {
+          "country": "Die Liste wird live von openholidaysapi.org geladen."
         }
       },
       "subdivision": {
@@ -13,22 +16,44 @@
         "description": "Wähle das Bundesland bzw. die Region (Schulferien unterscheiden sich regional).",
         "data": {
           "subdivision": "Bundesland / Region"
+        },
+        "data_description": {
+          "subdivision": "Schulferien werden pro Region veröffentlicht, in Deutschland z. B. pro Bundesland."
         }
       }
     },
     "abort": {
       "cannot_connect": "Der Schulferien-Dienst ist nicht erreichbar. Bitte später erneut versuchen.",
-      "already_configured": "Dieses Land/diese Region ist bereits konfiguriert."
+      "already_configured": "Dieses Land/diese Region ist bereits konfiguriert.",
+      "reconfigure_successful": "Land/Region wurde erfolgreich geändert."
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "Schulferien-Optionen",
+        "description": "Lege fest, wie oft die Feriendaten abgerufen werden und in welcher Sprache die Feriennamen erscheinen. Heute/Morgen schalten unabhängig vom Intervall lokal um Mitternacht um.",
         "data": {
-          "update_hours": "Aktualisierungsintervall (Stunden)"
+          "update_hours": "Aktualisierungsintervall (Stunden)",
+          "language": "Sprache der Feriennamen"
+        },
+        "data_description": {
+          "update_hours": "Wie oft openholidaysapi.org abgefragt wird (1–168 Stunden). Feriendaten ändern sich selten, 24 Stunden reichen völlig.",
+          "language": "„Home-Assistant-Sprache verwenden“ übernimmt deine Home-Assistant-Sprache. Alternativ einen zweistelligen ISO-639-1-Code wählen oder eingeben (z. B. DE). Liefert die API keinen Namen in dieser Sprache, wird ein anderer verfügbarer Name angezeigt."
         }
       }
+    }
+  },
+  "selector": {
+    "language": {
+      "options": {
+        "auto": "Home-Assistant-Sprache verwenden"
+      }
+    }
+  },
+  "device": {
+    "school_holidays": {
+      "name": "Schulferien"
     }
   },
   "entity": {
@@ -43,7 +68,16 @@
     "sensor": {
       "next_holiday": {
         "name": "Nächste Schulferien"
+      },
+      "last_successful_update": {
+        "name": "Letzte erfolgreiche Aktualisierung"
       }
+    }
+  },
+  "issues": {
+    "stale_data": {
+      "title": "Schulferien-Daten für {region} sind veraltet",
+      "description": "Die Schulferien-Daten für **{region}** konnten seit {days} Tagen nicht aktualisiert werden (letzte erfolgreiche Aktualisierung: {last_update}). Die Sensoren arbeiten mit den zwischengespeicherten Daten weiter, seitdem veröffentlichte Änderungen fehlen aber.\n\nPrüfe, ob Home Assistant `openholidaysapi.org` erreichen kann. Diese Meldung verschwindet nach der nächsten erfolgreichen Aktualisierung automatisch."
     }
   }
 }

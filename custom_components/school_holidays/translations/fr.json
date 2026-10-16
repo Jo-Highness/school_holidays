@@ -6,29 +6,54 @@
         "description": "Choisissez le pays dont vous souhaitez suivre les vacances scolaires.",
         "data": {
           "country": "Pays"
+        },
+        "data_description": {
+          "country": "La liste est chargée en direct depuis openholidaysapi.org."
         }
       },
       "subdivision": {
         "title": "État / région",
-        "description": "Choisissez l'état ou la région (les vacances varient selon la région).",
+        "description": "Choisissez l'état ou la région (les vacances scolaires varient selon la région).",
         "data": {
           "subdivision": "État / région"
+        },
+        "data_description": {
+          "subdivision": "Les dates de vacances scolaires sont publiées par région, p. ex. par zone ou par Land allemand."
         }
       }
     },
     "abort": {
-      "cannot_connect": "Impossible de joindre le service de vacances scolaires. Réessayez plus tard.",
-      "already_configured": "Ce pays/cette région est déjà configuré."
+      "cannot_connect": "Impossible de joindre le service des vacances scolaires. Veuillez réessayer plus tard.",
+      "already_configured": "Ce pays/cette région est déjà configuré(e).",
+      "reconfigure_successful": "Le pays/la région a été modifié(e) avec succès."
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Options des vacances scolaires",
+        "title": "Options Vacances scolaires",
+        "description": "Réglez la fréquence de récupération des données et la langue des noms de vacances. Aujourd'hui/demain basculent localement à minuit, quel que soit l'intervalle.",
         "data": {
-          "update_hours": "Intervalle de mise à jour (heures)"
+          "update_hours": "Intervalle de mise à jour (heures)",
+          "language": "Langue des noms de vacances"
+        },
+        "data_description": {
+          "update_hours": "Fréquence d'interrogation d'openholidaysapi.org (1 à 168 heures). Les dates changent rarement, 24 heures suffisent.",
+          "language": "« Suivre la langue de Home Assistant » utilise votre langue Home Assistant. Vous pouvez aussi choisir ou saisir un code ISO 639-1 à deux lettres (p. ex. FR). Si l'API n'a pas de nom dans cette langue, un autre nom disponible est affiché."
         }
       }
+    }
+  },
+  "selector": {
+    "language": {
+      "options": {
+        "auto": "Suivre la langue de Home Assistant"
+      }
+    }
+  },
+  "device": {
+    "school_holidays": {
+      "name": "Vacances scolaires"
     }
   },
   "entity": {
@@ -43,7 +68,16 @@
     "sensor": {
       "next_holiday": {
         "name": "Prochaines vacances scolaires"
+      },
+      "last_successful_update": {
+        "name": "Dernière mise à jour réussie"
       }
+    }
+  },
+  "issues": {
+    "stale_data": {
+      "title": "Les données de vacances scolaires pour {region} sont obsolètes",
+      "description": "Les données de vacances scolaires pour **{region}** n'ont pas pu être actualisées depuis {days} jours (dernière mise à jour réussie : {last_update}). Les capteurs continuent de fonctionner avec les dates en cache, mais les modifications publiées depuis manquent.\n\nVérifiez que Home Assistant peut joindre `openholidaysapi.org`. Ce message disparaît automatiquement après la prochaine mise à jour réussie."
     }
   }
 }
