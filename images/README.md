@@ -7,4 +7,5 @@ Delivered:
 - `config-flow.png`
 - `entities.png`
 - `dashboard.png`
-- `integrations-overview.png`
+- `integrations-overview.png` (not embedded: it only shows the Home Assistant loading
+  splash screen; replace with a real *Devices & Services* screenshot before using it)

@@ -26,13 +26,14 @@ Countdown bis zu den nächsten Ferien anzeigen.
 
 ## Funktionen
 
-- Konfiguration von Land und Region komplett über die UI
-- Einstellbares Update-Intervall (Standard: 12 Stunden)
+- Konfiguration von Land und Region komplett über die UI, nachträglich änderbar
+  (Neu konfigurieren)
+- Einstellbares Update-Intervall (Standard: 24 Stunden)
 - Datenquelle: [openholidaysapi.org](https://www.openholidaysapi.org/) –
-  kostenlos, kein API-Key erforderlich
+  freies Open-Data-Projekt (ODbL), kein API-Key erforderlich
 - Oberfläche in Englisch, Deutsch, Spanisch und Französisch (en/de/es/fr)
 - Lizenz: MIT
-- Mindestens Home Assistant 2024.4
+- Mindestens Home Assistant 2025.2
 
 ## Screenshots
 
