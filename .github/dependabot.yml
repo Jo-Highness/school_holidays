@@ -1,6 +1,6 @@
 version: 2
 updates:
-  # The integration has no pip runtime dependencies; keep GitHub Actions current.
+  # Keep GitHub Actions and the pinned test dependencies (requirements_test.txt) current.
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -10,3 +10,12 @@ updates:
       - "dependencies"
     commit-message:
       prefix: "ci"
+
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "test"
