@@ -2,22 +2,24 @@
 
 from __future__ import annotations
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from typing import Any
 
-from .const import DATA_CURRENT, DATA_TODAY, DATA_TOMORROW, DOMAIN
-from .coordinator import SchoolHolidaysCoordinator
+from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .const import DATA_CURRENT, DATA_TODAY, DATA_TOMORROW, DATA_TOMORROW_PERIOD
+from .coordinator import SchoolHolidaysConfigEntry, SchoolHolidaysCoordinator
 from .entity import SchoolHolidaysEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: SchoolHolidaysConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    coordinator: SchoolHolidaysCoordinator = hass.data[DOMAIN][entry.entry_id]
+    """Set up the today / tomorrow binary sensors."""
+    coordinator = entry.runtime_data
     async_add_entities(
         [
             HolidayTodayBinarySensor(coordinator),
@@ -27,28 +29,33 @@ async def async_setup_entry(
 
 
 class _HolidayBinary(SchoolHolidaysEntity, BinarySensorEntity):
-    _attr_icon = "mdi:school-outline"
-    _data_key = DATA_TODAY
+    """On while the given day is inside a holiday period.
+
+    The attributes describe the period covering *that* day (today resp. tomorrow).
+    """
+
+    _data_key: str
+    _period_key: str
 
     @property
     def is_on(self) -> bool | None:
-        data = self.coordinator.data or {}
-        val = data.get(self._data_key)
+        val = (self.coordinator.data or {}).get(self._data_key)
         return bool(val) if val is not None else None
 
     @property
-    def extra_state_attributes(self) -> dict:
-        cur = (self.coordinator.data or {}).get(DATA_CURRENT) or {}
+    def extra_state_attributes(self) -> dict[str, Any]:
+        period = (self.coordinator.data or {}).get(self._period_key) or {}
         return {
-            "holiday_name": cur.get("name"),
-            "start_date": cur.get("start"),
-            "end_date": cur.get("end"),
+            "holiday_name": period.get("name"),
+            "start_date": period.get("start"),
+            "end_date": period.get("end"),
         }
 
 
 class HolidayTodayBinarySensor(_HolidayBinary):
     _attr_translation_key = "today"
     _data_key = DATA_TODAY
+    _period_key = DATA_CURRENT
 
     def __init__(self, coordinator: SchoolHolidaysCoordinator) -> None:
         super().__init__(coordinator, "today")
@@ -56,8 +63,8 @@ class HolidayTodayBinarySensor(_HolidayBinary):
 
 class HolidayTomorrowBinarySensor(_HolidayBinary):
     _attr_translation_key = "tomorrow"
-    _attr_icon = "mdi:calendar-arrow-right"
     _data_key = DATA_TOMORROW
+    _period_key = DATA_TOMORROW_PERIOD
 
     def __init__(self, coordinator: SchoolHolidaysCoordinator) -> None:
         super().__init__(coordinator, "tomorrow")

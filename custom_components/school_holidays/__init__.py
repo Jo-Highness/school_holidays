@@ -2,40 +2,41 @@
 
 from __future__ import annotations
 
-import logging
-
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 
 from .const import DOMAIN
-from .coordinator import SchoolHolidaysCoordinator
+from .coordinator import (
+    SchoolHolidaysConfigEntry,
+    SchoolHolidaysCoordinator,
+    stale_issue_id,
+)
 
-_LOGGER = logging.getLogger(__name__)
-
-PLATFORMS = ["binary_sensor", "sensor"]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: SchoolHolidaysConfigEntry) -> bool:
     """Set up School Holidays from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
     coordinator = SchoolHolidaysCoordinator(hass, entry)
     await coordinator.async_setup()
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        coordinator: SchoolHolidaysCoordinator = hass.data[DOMAIN].pop(entry.entry_id)
-        await coordinator.async_shutdown()
-    return unload_ok
+async def async_unload_entry(hass: HomeAssistant, entry: SchoolHolidaysConfigEntry) -> bool:
+    """Unload a config entry (the coordinator and midnight timer stop via async_on_unload)."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_remove_entry(hass: HomeAssistant, entry: SchoolHolidaysConfigEntry) -> None:
+    """Drop a pending repair issue when the entry is deleted."""
+    ir.async_delete_issue(hass, DOMAIN, stale_issue_id(entry.entry_id))
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: SchoolHolidaysConfigEntry) -> None:
     """Reload the entry when its options change."""
     await hass.config_entries.async_reload(entry.entry_id)

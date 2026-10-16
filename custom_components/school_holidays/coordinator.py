@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import EVENT_CORE_CONFIG_UPDATE
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -15,21 +18,32 @@ from homeassistant.util import dt as dt_util
 from . import api, logic
 from .const import (
     CONF_COUNTRY,
+    CONF_COUNTRY_NAME,
     CONF_LANGUAGE,
     CONF_SUBDIVISION,
+    CONF_SUBDIVISION_NAME,
     CONF_UPDATE_HOURS,
     DATA_CURRENT,
+    DATA_LAST_SUCCESS,
     DATA_NEXT,
     DATA_PERIODS,
     DATA_TODAY,
     DATA_TOMORROW,
+    DATA_TOMORROW_PERIOD,
     DEFAULT_LANGUAGE,
     DEFAULT_UPDATE_HOURS,
     DOMAIN,
+    ISSUE_STALE_DATA,
+    LANGUAGE_AUTO,
     LOOKAHEAD_DAYS,
+    MAX_UPDATE_HOURS,
+    MIN_UPDATE_HOURS,
+    STALE_AFTER,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+type SchoolHolidaysConfigEntry = ConfigEntry[SchoolHolidaysCoordinator]
 
 
 def _period_dict(p: logic.Period | None) -> dict | None:
@@ -38,47 +52,84 @@ def _period_dict(p: logic.Period | None) -> dict | None:
     return {"name": p.name, "start": p.start.isoformat(), "end": p.end.isoformat()}
 
 
-class SchoolHolidaysCoordinator(DataUpdateCoordinator[dict]):
+def stale_issue_id(entry_id: str) -> str:
+    """Repair-issue id for an entry whose data has not been refreshed for too long."""
+    return f"{ISSUE_STALE_DATA}_{entry_id}"
+
+
+class SchoolHolidaysCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Fetches holiday periods and derives today/tomorrow/next, robustly."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
-        self.entry = entry
+    config_entry: SchoolHolidaysConfigEntry
+
+    def __init__(self, hass: HomeAssistant, entry: SchoolHolidaysConfigEntry) -> None:
         opts = {**entry.data, **entry.options}
-        self.country = opts[CONF_COUNTRY]
-        self.subdivision = opts.get(CONF_SUBDIVISION) or None
-        self.language = opts.get(CONF_LANGUAGE, DEFAULT_LANGUAGE)
+        self.country: str = opts[CONF_COUNTRY]
+        self.subdivision: str | None = opts.get(CONF_SUBDIVISION) or None
+        self.language_setting: str = opts.get(CONF_LANGUAGE) or LANGUAGE_AUTO
         hours = int(opts.get(CONF_UPDATE_HOURS, DEFAULT_UPDATE_HOURS))
+        hours = min(MAX_UPDATE_HOURS, max(MIN_UPDATE_HOURS, hours))
         super().__init__(
             hass,
             _LOGGER,
-            name=DOMAIN,
-            update_interval=timedelta(hours=max(1, hours)),
+            config_entry=entry,
+            name=f"{DOMAIN} {entry.title} ({entry.entry_id})",
+            update_interval=timedelta(hours=hours),
         )
         self._periods: list[logic.Period] = []
-        self._unsub_midnight = None
+        self.last_successful_update: datetime | None = None
+
+    @property
+    def entry(self) -> SchoolHolidaysConfigEntry:
+        """The config entry this coordinator belongs to."""
+        return self.config_entry
+
+    @property
+    def region_name(self) -> str:
+        """Human-readable region (subdivision, else country) for messages."""
+        opts = {**self.config_entry.data, **self.config_entry.options}
+        return (
+            opts.get(CONF_SUBDIVISION_NAME)
+            or opts.get(CONF_COUNTRY_NAME)
+            or self.config_entry.title
+            or self.country
+        )
+
+    @property
+    def language(self) -> str:
+        """ISO 639-1 code used for holiday names (resolved from HA if set to auto)."""
+        if self.language_setting.lower() == LANGUAGE_AUTO:
+            return logic.iso_language(self.hass.config.language, DEFAULT_LANGUAGE)
+        return logic.iso_language(self.language_setting, DEFAULT_LANGUAGE)
 
     async def async_setup(self) -> None:
+        """First refresh plus the local midnight rollover and language listener."""
         await self.async_config_entry_first_refresh()
         # Recompute today/tomorrow at local midnight WITHOUT a network call, so
         # the sensors flip exactly at the day boundary even if the API is down.
-        self._unsub_midnight = async_track_time_change(
-            self.hass, self._handle_midnight, hour=0, minute=0, second=5
+        self.config_entry.async_on_unload(
+            async_track_time_change(self.hass, self._handle_midnight, hour=0, minute=0, second=5)
         )
-
-    async def async_shutdown(self) -> None:  # type: ignore[override]
-        if self._unsub_midnight:
-            self._unsub_midnight()
-            self._unsub_midnight = None
-        await super().async_shutdown()
+        if self.language_setting.lower() == LANGUAGE_AUTO:
+            self.config_entry.async_on_unload(
+                self.hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, self._handle_core_config)
+            )
 
     @callback
-    def _handle_midnight(self, _now) -> None:
+    def _handle_midnight(self, _now: datetime) -> None:
         self.async_set_updated_data(self._derive())
 
-    def _derive(self) -> dict:
+    @callback
+    def _handle_core_config(self, event: Event) -> None:
+        """Re-fetch holiday names when the Home Assistant language changes."""
+        if "language" in (event.data or {}):
+            self.config_entry.async_create_background_task(
+                self.hass, self.async_request_refresh(), f"{DOMAIN}_language_refresh"
+            )
+
+    def _derive(self) -> dict[str, Any]:
         today = dt_util.now().date()
         tomorrow = today + timedelta(days=1)
-        current = logic.period_on(today, self._periods)
         nxt = logic.current_or_next(today, self._periods)
         nxt_dict = _period_dict(nxt)
         if nxt_dict is not None:
@@ -87,29 +138,66 @@ class SchoolHolidaysCoordinator(DataUpdateCoordinator[dict]):
             DATA_PERIODS: len(self._periods),
             DATA_TODAY: logic.is_holiday(today, self._periods),
             DATA_TOMORROW: logic.is_holiday(tomorrow, self._periods),
-            DATA_CURRENT: _period_dict(current),
+            DATA_CURRENT: _period_dict(logic.period_on(today, self._periods)),
+            DATA_TOMORROW_PERIOD: _period_dict(logic.period_on(tomorrow, self._periods)),
             DATA_NEXT: nxt_dict,
+            DATA_LAST_SUCCESS: self.last_successful_update,
         }
 
-    async def _async_update_data(self) -> dict:
+    @callback
+    def _check_stale(self) -> None:
+        """Raise a repair issue once the cached data is older than STALE_AFTER."""
+        if self.last_successful_update is None:
+            return
+        age = dt_util.utcnow() - self.last_successful_update
+        if age < STALE_AFTER:
+            return
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            stale_issue_id(self.config_entry.entry_id),
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=ISSUE_STALE_DATA,
+            translation_placeholders={
+                "region": self.region_name,
+                "days": str(age.days),
+                "last_update": dt_util.as_local(self.last_successful_update).strftime(
+                    "%Y-%m-%d %H:%M"
+                ),
+            },
+        )
+
+    async def _async_update_data(self) -> dict[str, Any]:
         today = dt_util.now().date()
         valid_from = today.isoformat()
         valid_to = (today + timedelta(days=LOOKAHEAD_DAYS)).isoformat()
         session = async_get_clientsession(self.hass)
+        language = self.language
         try:
             raw = await api.async_get_school_holidays(
-                session, self.country, self.subdivision, valid_from, valid_to, self.language
+                session, self.country, self.subdivision, valid_from, valid_to, language
             )
-            self._periods = logic.parse_periods(raw, self.language)
         except api.OpenHolidaysError as err:
-            # Robustness: once we have data, keep the last known periods instead of
-            # going unavailable, so automations keep working through API hiccups.
-            if self._periods:
-                _LOGGER.warning("School holidays API failed (%s); keeping last data", err)
-            else:
+            if not self._periods:
                 # No cached data yet (e.g. the very first refresh): surface the
                 # failure so Home Assistant retries the setup instead of silently
                 # creating empty sensors. On the first refresh this becomes
                 # ConfigEntryNotReady automatically.
                 raise UpdateFailed(f"School holidays API unavailable: {err}") from err
+            # Robustness: once we have data, keep the last known periods instead of
+            # going unavailable, so automations keep working through API hiccups.
+            # The cached window reaches LOOKAHEAD_DAYS ahead, so it stays usable;
+            # a repair issue tells the user once it is getting old.
+            _LOGGER.warning(
+                "School holidays API failed for %s (%s); keeping data from %s",
+                self.region_name,
+                err,
+                self.last_successful_update,
+            )
+            self._check_stale()
+        else:
+            self._periods = logic.parse_periods(raw, language)
+            self.last_successful_update = dt_util.utcnow()
+            ir.async_delete_issue(self.hass, DOMAIN, stale_issue_id(self.config_entry.entry_id))
         return self._derive()
