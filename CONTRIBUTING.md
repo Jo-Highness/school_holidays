@@ -10,17 +10,20 @@ custom_components/school_holidays/   # the integration
   __init__.py                        # setup/unload of the config entry
   api.py                             # async client for openholidaysapi.org
   binary_sensor.py                   # "today" / "tomorrow" binary sensors
-  sensor.py                          # "next school holiday" sensor
-  config_flow.py                     # UI config flow (country → region)
-  coordinator.py                     # DataUpdateCoordinator (midnight rollover, keep-last)
+  sensor.py                          # "next school holiday" + "last successful update" sensors
+  config_flow.py                     # UI config/reconfigure flow (country → region) + options
+  coordinator.py                     # DataUpdateCoordinator (midnight rollover, keep-last, repair issue)
+  diagnostics.py                     # config-entry diagnostics
   entity.py                          # shared base entity
   logic.py                           # date/holiday evaluation helpers
   const.py                           # constants
   manifest.json / strings.json       # integration metadata + UI strings
+  icons.json                         # entity icons
   translations/                      # en, de, es, fr
 tests/                               # pytest suite
 hacs.json                            # HACS metadata
 pyproject.toml / pytest.ini          # ruff + pytest configuration
+requirements_test.txt                # pinned test dependencies
 ```
 
 ## Development setup
@@ -30,8 +33,11 @@ Requires **Python 3.13**.
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install ruff pytest pytest-homeassistant-custom-component
+pip install ruff -r requirements_test.txt
 ```
+
+`requirements_test.txt` pins `pytest-homeassistant-custom-component` (and thereby the
+Home Assistant version the tests run against); Dependabot proposes updates.
 
 The integration itself has **no runtime dependencies** (`requirements` is empty in
 `manifest.json`); only the tooling above is needed for development.
@@ -44,6 +50,7 @@ Run all three locally and make sure they pass:
 ruff check .        # lint
 ruff format .       # format (or: ruff format --check .)
 pytest              # tests
+pytest --cov=custom_components.school_holidays --cov-report=term-missing  # with coverage
 ```
 
 The CI runs the same checks (see `.github/workflows/test.yml`) plus hassfest and

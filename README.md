@@ -1,13 +1,31 @@
 # 🎒 School Holidays
 
-> A Home Assistant integration that tells you whether **today** or **tomorrow** is a school holiday for your country and region — and when the next break begins. Data comes from the free, official **[openholidaysapi.org](https://openholidaysapi.org)**, so it works for dozens of countries and their sub-regions without an API key.
+> Home Assistant integration that tells you whether **today** or **tomorrow** is a school
+> holiday in your country and region, and when the next break begins. Data comes from
+> **[OpenHolidays](https://openholidaysapi.org)**, a free community open-data project
+> (no API key needed) that covers many countries and their regions.
 
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
 [![Validate](https://github.com/Jo-Highness/school_holidays/actions/workflows/validate.yml/badge.svg)](https://github.com/Jo-Highness/school_holidays/actions/workflows/validate.yml)
 [![Tests](https://github.com/Jo-Highness/school_holidays/actions/workflows/test.yml/badge.svg)](https://github.com/Jo-Highness/school_holidays/actions/workflows/test.yml)
 [![Release](https://img.shields.io/github/v/release/Jo-Highness/school_holidays)](https://github.com/Jo-Highness/school_holidays/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Home Assistant 2024.4+](https://img.shields.io/badge/Home%20Assistant-2024.4%2B-41BDF5.svg)](https://www.home-assistant.io)
+[![Home Assistant 2025.2+](https://img.shields.io/badge/Home%20Assistant-2025.2%2B-41BDF5.svg)](https://www.home-assistant.io)
+
+## Quick start
+
+1. **Install** via HACS:
+   [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Jo-Highness&repository=school_holidays&category=integration)
+   → **Download**, then **restart** Home Assistant.
+2. **Add the integration:**
+   [![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=school_holidays)
+   → pick your country (e.g. **Germany**) and your region (e.g. **Hesse**).
+3. **Done.** You now have a device *Hesse* with these entities (English HA):
+   `binary_sensor.hesse_school_holidays_today`, `binary_sensor.hesse_school_holidays_tomorrow`
+   and `sensor.hesse_next_school_holiday`. Use them in automations — see the
+   [examples](#automation-examples).
+
+> 🇩🇪 Deutschsprachige Kurzanleitung: [siehe unten](#kurzanleitung-deutsch).
 
 ---
 
@@ -21,34 +39,35 @@
 - [Automation examples](#automation-examples)
 - [How it behaves](#how-it-behaves)
 - [Troubleshooting / FAQ](#troubleshooting--faq)
+- [Kurzanleitung (Deutsch)](#kurzanleitung-deutsch)
+- [Data source, license and fair use](#data-source-license-and-fair-use)
 - [Contributing](#contributing)
 - [License](#license)
-- [Credits](#credits)
 
 ---
 
 ## Why this exists
 
-Plenty of home automations should simply behave differently on a school holiday: wake-up
-lights and alarms, chores, screen-time limits, blinds, heating schedules. Home Assistant
-has no built-in source for **school holidays**, and the school-holiday calendar differs by
-region (in Germany, for example, every federal state has its own dates).
+Plenty of home automations should behave differently on a school holiday: wake-up lights
+and alarms, chores, screen-time limits, blinds, heating schedules. Home Assistant has no
+built-in source for **school holidays**, and the school-holiday calendar differs by region
+(in Germany, for example, every federal state has its own dates).
 
 This integration fills that gap:
 
-- It covers **arbitrary countries and their sub-regions** through
-  [openholidaysapi.org](https://openholidaysapi.org) — a free, official open-data service
-  that requires **no API key**.
-- Setup is entirely through the UI. You pick your country and region from dropdowns that
-  are populated live from the API — no ISO codes to memorise, no YAML, no REST/template
+- It covers **many countries and their regions** through
+  [openholidaysapi.org](https://openholidaysapi.org) — **no API key** required.
+  Coverage depends on what the project has published; check that your country/region is
+  listed before relying on it.
+- Setup is done entirely in the UI. Country and region come from dropdowns that are filled
+  live from the API, so there are no ISO codes to memorise and no YAML/REST/template
   scaffolding to maintain.
 
 **How it differs from Workday / public-holiday integrations.** The built-in *Workday*
-integration and typical public-holiday sources model **statutory public holidays and
-working days**. School holidays are a different calendar: they are usually longer periods
-(weeks, not single days), they vary by sub-region, and a day can be a normal working day
-for adults while still being a school holiday. This integration models exactly that
-school-holiday calendar per region.
+integration and public-holiday sources model **statutory public holidays and working
+days**. School holidays are a different calendar: they are usually multi-week periods, they
+vary by region, and a day can be a normal working day for adults while still being a school
+holiday. The two complement each other — see [example 3](#3-wake-up-alarm-only-on-real-school-days).
 
 ## Screenshots
 
@@ -70,163 +89,260 @@ school-holiday calendar per region.
 
 ### HACS (recommended)
 
-This integration is installed through [HACS](https://hacs.xyz/).
-
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Jo-Highness&repository=school_holidays&category=integration)
-
-1. Click the button above (it opens HACS on this repository), then choose **Download**.
-   If you prefer to do it manually: open **HACS → Integrations → ⋮ → Custom repositories**,
-   add `https://github.com/Jo-Highness/school_holidays` with category **Integration**, then
-   search for *School Holidays* and download it.
+1. Click the HACS button in the [Quick start](#quick-start), then choose **Download**.
+   Manually: **HACS → ⋮ → Custom repositories**, add
+   `https://github.com/Jo-Highness/school_holidays` with type **Integration**, then search
+   for *School Holidays* and download it.
 2. **Restart** Home Assistant.
-3. Go to **Settings → Devices & Services → Add Integration**, search for **School Holidays**,
-   and follow the steps below.
+3. **Settings → Devices & Services → Add Integration → School Holidays**.
 
 ### Manual installation
 
-1. Copy the folder `custom_components/school_holidays/` from this repository into your
-   Home Assistant configuration directory, so you end up with
-   `<config>/custom_components/school_holidays/`.
+1. Copy `custom_components/school_holidays/` into your Home Assistant configuration
+   directory, so you end up with `<config>/custom_components/school_holidays/`.
 2. **Restart** Home Assistant.
-3. Go to **Settings → Devices & Services → Add Integration**, and search for **School Holidays**.
+3. **Settings → Devices & Services → Add Integration → School Holidays**.
+
+Requires **Home Assistant 2025.2** or newer.
 
 ## Configuration
 
-Everything is configured in the UI — there is no YAML. During setup you pick a country and
-(if the country has them) a region. After setup you can change how often the data is
-refreshed from the integration's **Configure** button.
+Everything is configured in the UI — there is no YAML.
 
-| Option | Where | Type | Default | Description |
-| --- | --- | --- | --- | --- |
-| **Country** | Config flow (step 1) | Dropdown, populated from the API | — | *Required.* The country whose school-holiday calendar you want. |
-| **State / region** | Config flow (step 2) | Dropdown, populated from the API | — | *Required when the selected country has sub-regions.* This step is **skipped automatically** for countries that have none, and the whole country is configured instead. |
-| **Update interval** | Options (**Configure**) | Number, 1–168 hours | `12` | How often the integration polls the API for fresh holiday data. |
+| Option | Where | Default | Description |
+| --- | --- | --- | --- |
+| **Country** | Setup, step 1 / **Reconfigure** | — | *Required.* The country whose school-holiday calendar you want. |
+| **State / region** | Setup, step 2 / **Reconfigure** | — | *Required when the country has regions.* Skipped automatically for countries without regions (the whole country is used). |
+| **Update interval** | **Configure** (options) | `24` hours | How often the API is polled (1–168 h). Holiday dates rarely change; today/tomorrow switch locally at midnight regardless of this value. |
+| **Language of holiday names** | **Configure** (options) | *Follow Home Assistant language* | Language used for `holiday_name`. Pick *Follow Home Assistant language*, a listed code, or type any two-letter ISO 639-1 code. Entries created before 1.1.0 keep the language they were set up with until you change it here. |
 
-The interface language (dropdown labels, entity names) follows your Home Assistant
-language. Holiday **names** are requested in your Home Assistant language too, as far as
-openholidaysapi.org provides them.
-
-**Multiple regions.** You can add the integration more than once — one entry per
-country/region. Each entry creates its own device (the device is named after the region,
-with manufacturer *openholidaysapi.org*) and its own set of entities, so you can track
-several federal states side by side.
+- **Change country/region later:** **Settings → Devices & Services → School Holidays → ⋮ →
+  Reconfigure**. The entry, its entities and their entity IDs are kept.
+- **Multiple regions:** add the integration once per country/region. Each entry gets its
+  own device (named after the region) and its own entities.
+- The UI texts and entity names are translated into English, German, Spanish and French.
 
 ## Entities
 
-Each configured region provides the following entities. All use `has_entity_name`, so the
-integration prefixes them with the device (region) name — the exact `entity_id` therefore
-depends on your region.
+Each configured region provides the following entities. They use `has_entity_name`, so the
+entity ID is built from the **device (region) name + entity name in your Home Assistant
+language at the time the entity was created**.
 
-| Entity | Type | `device_class` | Attributes | Example state |
-| --- | --- | --- | --- | --- |
-| **School holidays today** | `binary_sensor` | — | `holiday_name`, `start_date`, `end_date` | `on` while today falls inside a holiday period, otherwise `off` |
-| **School holidays tomorrow** | `binary_sensor` | — | `holiday_name`, `start_date`, `end_date` | `on` while tomorrow falls inside a holiday period, otherwise `off` |
-| **Next school holiday** | `sensor` | `date` | `holiday_name`, `start_date`, `end_date`, `days_until` | `2026-10-06` (the start date of the current or next break) |
+| Entity | Type | Attributes | State |
+| --- | --- | --- | --- |
+| **School holidays today** | `binary_sensor` | `holiday_name`, `start_date`, `end_date` of the break covering **today** | `on` if today is inside a holiday period |
+| **School holidays tomorrow** | `binary_sensor` | `holiday_name`, `start_date`, `end_date` of the break covering **tomorrow** | `on` if tomorrow is inside a holiday period |
+| **Next school holiday** | `sensor` (`device_class: date`) | `holiday_name`, `start_date`, `end_date`, `days_until` | Start date of the current or next break, e.g. `2026-10-05` |
+| **Last successful update** | `sensor` (`timestamp`, diagnostic) | — | When data was last fetched successfully |
 
 Notes:
 
-- The two binary sensors expose the attributes of the **period that is (or will be)
-  active** on the relevant day.
-- **Next school holiday** reports the **start date** of the current or upcoming break as a
-  `date` state; `days_until` counts the days from today to that start. There is **no**
-  `state_class` on this sensor.
-- Icons: today `mdi:school-outline`, tomorrow `mdi:calendar-arrow-right`,
-  next holiday `mdi:calendar-star`.
+- Outside a holiday, the binary sensors' attributes are `null`. On the last day of a break,
+  *today* is `on` (with that break's details) and *tomorrow* is `off` (no details).
+- `days_until` is `0` while a break is running. `start_date`/`end_date` are ISO dates and
+  both days are part of the break.
+- *Next school holiday* has no `state_class` (a date is not a measurement).
+
+**Entity IDs depend on your language.** Examples for the region Hesse/Hessen:
+
+| Entity | English Home Assistant | German Home Assistant |
+| --- | --- | --- |
+| today | `binary_sensor.hesse_school_holidays_today` | `binary_sensor.hessen_schulferien_heute` |
+| tomorrow | `binary_sensor.hesse_school_holidays_tomorrow` | `binary_sensor.hessen_schulferien_morgen` |
+| next | `sensor.hesse_next_school_holiday` | `sensor.hessen_nachste_schulferien` |
+| last update | `sensor.hesse_last_successful_update` | `sensor.hessen_letzte_erfolgreiche_aktualisierung` |
+
+Check yours under **Settings → Devices & Services → Entities** (search for the region) and
+adapt the examples below.
 
 ## Automation examples
 
-The `entity_id`s below are examples for a region called *Hesse* — replace them with the
-IDs of your own region (check **Settings → Devices & Services → Entities**).
+The examples use the English entity IDs for *Hesse*. Replace them with yours.
 
-### 1. Notify that there is no school tomorrow
+### 1. Evening notification before the first day off
 
 ```yaml
 alias: No school tomorrow
-trigger:
-  - platform: state
+triggers:
+  - trigger: time
+    at: "18:00:00"
+conditions:
+  - condition: state
     entity_id: binary_sensor.hesse_school_holidays_tomorrow
-    to: "on"
-action:
-  - service: notify.mobile_app_phone
-    data:
-      title: "No school tomorrow 🎉"
-      message: >-
-        Tomorrow is a school holiday
-        ({{ state_attr('binary_sensor.hesse_school_holidays_tomorrow', 'holiday_name') }}).
-mode: single
-```
-
-### 2. Skip the school-morning alarm on holidays
-
-```yaml
-alias: School morning wake-up
-trigger:
-  - platform: time
-    at: "06:45:00"
-condition:
-  # Only run on actual school days.
+    state: "on"
   - condition: state
     entity_id: binary_sensor.hesse_school_holidays_today
     state: "off"
-action:
-  - service: scene.turn_on
+actions:
+  - action: notify.mobile_app_phone
+    data:
+      title: "No school tomorrow 🎉"
+      message: >-
+        {{ state_attr('binary_sensor.hesse_school_holidays_tomorrow', 'holiday_name') }}
+        until {{ state_attr('binary_sensor.hesse_school_holidays_tomorrow', 'end_date') }}.
+mode: single
+```
+
+### 2. Heating schedule: keep the kids' room warm during holidays
+
+```yaml
+alias: Kids' room heating on weekday mornings
+triggers:
+  - trigger: time
+    at: "07:45:00"
+conditions:
+  - condition: time
+    weekday: [mon, tue, wed, thu, fri]
+actions:
+  - if:
+      - condition: state
+        entity_id: binary_sensor.hesse_school_holidays_today
+        state: "on"
+    then:
+      - action: climate.set_temperature
+        target:
+          entity_id: climate.kids_room
+        data:
+          temperature: 21
+    else:
+      # Kids are at school -> setback temperature.
+      - action: climate.set_temperature
+        target:
+          entity_id: climate.kids_room
+        data:
+          temperature: 17
+mode: single
+```
+
+Using the [Scheduler card/component](https://github.com/nielsfaber/scheduler-component)?
+Add a condition *`binary_sensor.hesse_school_holidays_today` is off* to your school-day
+schedule and a second schedule with *is on* for holidays.
+
+### 3. Wake-up alarm only on real school days
+
+Combine with the built-in [Workday](https://www.home-assistant.io/integrations/workday/)
+integration so neither weekends, public holidays nor school holidays wake the kids:
+
+```yaml
+alias: School morning wake-up
+triggers:
+  - trigger: time
+    at: "06:45:00"
+conditions:
+  - condition: state
+    entity_id: binary_sensor.workday_sensor
+    state: "on"
+  - condition: state
+    entity_id: binary_sensor.hesse_school_holidays_today
+    state: "off"
+actions:
+  - action: scene.turn_on
     target:
       entity_id: scene.school_wakeup
 mode: single
 ```
 
-### 3. Countdown to the next holiday
+### 4. Countdown one week before the next break
 
 ```yaml
-alias: Announce holiday countdown
-trigger:
-  - platform: time
+alias: Holiday countdown
+triggers:
+  - trigger: time
     at: "07:30:00"
-condition:
+conditions:
   - condition: template
     value_template: >-
       {{ state_attr('sensor.hesse_next_school_holiday', 'days_until') | int(-1) == 7 }}
-action:
-  - service: notify.mobile_app_phone
+actions:
+  - action: notify.mobile_app_phone
     data:
       message: >-
-        One week until
-        {{ state_attr('sensor.hesse_next_school_holiday', 'holiday_name') }}!
+        One week until {{ state_attr('sensor.hesse_next_school_holiday', 'holiday_name') }}!
 mode: single
+```
+
+### 5. Template sensor and calendar entry
+
+A template sensor (in `configuration.yaml`) with a readable status text:
+
+```yaml
+template:
+  - sensor:
+      - name: "School holiday status"
+        state: >-
+          {% set n = 'sensor.hesse_next_school_holiday' %}
+          {% if is_state('binary_sensor.hesse_school_holidays_today', 'on') %}
+            {{ state_attr('binary_sensor.hesse_school_holidays_today', 'holiday_name') }}
+            until {{ state_attr('binary_sensor.hesse_school_holidays_today', 'end_date') }}
+          {% elif state_attr(n, 'days_until') is not none %}
+            {{ state_attr(n, 'holiday_name') }} in {{ state_attr(n, 'days_until') }} days
+          {% else %}
+            No upcoming school holidays known
+          {% endif %}
+```
+
+The integration does not provide a calendar entity, but you can copy each upcoming break
+into a [Local Calendar](https://www.home-assistant.io/integrations/local_calendar/) (all-day
+events in Home Assistant use an **exclusive** end date, hence the `+ 1 day`):
+
+```yaml
+alias: Copy next school holiday to the family calendar
+triggers:
+  - trigger: state
+    entity_id: sensor.hesse_next_school_holiday
+    not_from: ["unknown", "unavailable"]
+    not_to: ["unknown", "unavailable"]
+actions:
+  - action: calendar.create_event
+    target:
+      entity_id: calendar.family
+    data:
+      summary: "{{ state_attr('sensor.hesse_next_school_holiday', 'holiday_name') }}"
+      start_date: "{{ state_attr('sensor.hesse_next_school_holiday', 'start_date') }}"
+      end_date: >-
+        {{ (strptime(state_attr('sensor.hesse_next_school_holiday', 'end_date'), '%Y-%m-%d')
+            + timedelta(days=1)).strftime('%Y-%m-%d') }}
+mode: queued
 ```
 
 ## How it behaves
 
-- **Polling + local midnight rollover.** Holiday data is refreshed on the update interval
-  you configure, but the *today* / *tomorrow* sensors are also **recomputed locally at
-  midnight** without any network call — so they flip exactly at the day boundary even
-  between polls.
-- **Robust against API outages.** If a refresh fails because the API is briefly
-  unreachable, the integration **keeps its last known data** rather than dropping the
-  sensors to `unknown`, so your automations keep working.
-- **Clean first setup.** If the **very first** setup fails because the API cannot be
-  reached, the integration raises `ConfigEntryNotReady` and Home Assistant retries — it
-  never creates empty or misleading sensors.
+- **Polling + local midnight rollover.** Holiday periods for the next ~400 days are fetched
+  once per update interval (default 24 h). Shortly after local midnight, *today*,
+  *tomorrow* and *next* are **recomputed locally without a network call**, so they switch
+  exactly at the day boundary.
+- **Robust against API outages.** If a refresh fails, the integration **keeps its last
+  known data** instead of going `unavailable`. Because the cached window covers more than a
+  year ahead, the sensors stay correct.
+- **Repair notice for long outages.** If no refresh has succeeded for **7 days**, a repair
+  issue appears under **Settings → System → Repairs**. It disappears automatically after
+  the next successful update. *Last successful update* shows the timestamp.
+- **Clean first setup.** If the **very first** fetch fails, setup is retried by Home
+  Assistant (`ConfigEntryNotReady`) instead of creating empty sensors.
+- **Language changes.** With *Follow Home Assistant language*, holiday names are re-fetched
+  when you change the Home Assistant language.
 
 ## Troubleshooting / FAQ
 
-**The sensors are `unavailable` or the entry keeps retrying after adding it.**
-This happens when openholidaysapi.org could not be reached during the first setup. Home
-Assistant retries automatically; once the API is reachable the entry finishes loading. Check
-that your Home Assistant host has outbound internet access to `openholidaysapi.org`.
+**The entry keeps retrying after adding it.**
+openholidaysapi.org could not be reached during the first setup. Home Assistant retries
+automatically. Check that your host can reach `openholidaysapi.org` over HTTPS.
 
 **I picked the wrong country or region.**
-Region and country are chosen during setup and are not editable afterwards. Remove the
-integration entry (**Settings → Devices & Services → School Holidays → ⋮ → Delete**) and add
-it again with the correct selection.
+Use **⋮ → Reconfigure** on the integration entry. Entity IDs stay the same, so existing
+automations keep working (the device is renamed to the new region; rename entity IDs
+yourself if you want them to match).
 
-**Holiday names appear in the wrong language.**
-Holiday names are requested in your Home Assistant language and depend on what
-openholidaysapi.org publishes for that country. If a translation is not available upstream,
-the API returns the name in whatever language it does have. The integration's own UI and
-entity names are translated for English, German, Spanish and French.
+**My entity IDs look different from the examples.**
+They are generated from your Home Assistant language and region name — see
+[Entities](#entities).
 
-**Enable debug logging** to see exactly what the integration requests and receives:
+**Holiday names are in the wrong language.**
+Set **Configure → Language of holiday names**. If OpenHolidays has no name in that
+language, another available name is used.
+
+**Download diagnostics** via **⋮ → Download diagnostics** when reporting a bug, and
+enable debug logging if needed:
 
 ```yaml
 logger:
@@ -234,25 +350,71 @@ logger:
     custom_components.school_holidays: debug
 ```
 
-Add this to `configuration.yaml`, restart Home Assistant, and check
-**Settings → System → Logs**.
+## Kurzanleitung (Deutsch)
+
+Die Integration liefert pro Bundesland/Region, ob **heute** oder **morgen** Schulferien sind
+und wann die **nächsten Ferien** beginnen. Daten: [OpenHolidays](https://openholidaysapi.org)
+(freies Open-Data-Projekt, kein API-Key).
+
+1. **Installieren:** In HACS dieses Repository öffnen (Button oben) → **Herunterladen** →
+   Home Assistant **neu starten**.
+2. **Einrichten:** **Einstellungen → Geräte & Dienste → Integration hinzufügen →
+   School Holidays** → Land **Deutschland**, Region z. B. **Hessen** wählen.
+3. **Nutzen:** Bei deutscher Home-Assistant-Sprache entstehen
+   `binary_sensor.hessen_schulferien_heute`, `binary_sensor.hessen_schulferien_morgen` und
+   `sensor.hessen_nachste_schulferien` (Attribute `holiday_name`, `start_date`, `end_date`,
+   `days_until`). Die Beispiele oben verwenden englische IDs (`hesse_…`) — bitte anpassen.
+
+Weitere Hinweise:
+
+- **Konfigurieren:** Aktualisierungsintervall (Standard 24 h) und Sprache der Feriennamen
+  (Standard: Home-Assistant-Sprache).
+- **Falsches Bundesland?** **⋮ → Neu konfigurieren** — Entitäten und IDs bleiben erhalten.
+- Bei API-Ausfall bleiben die letzten Daten aktiv; nach 7 Tagen ohne Aktualisierung
+  erscheint ein Hinweis unter **Einstellungen → System → Reparaturen**.
+
+Beispiel: Wecker nur an echten Schultagen (zusammen mit der Integration *Workday*/Arbeitstag):
+
+```yaml
+alias: Schulwecker
+triggers:
+  - trigger: time
+    at: "06:45:00"
+conditions:
+  - condition: state
+    entity_id: binary_sensor.workday_sensor
+    state: "on"
+  - condition: state
+    entity_id: binary_sensor.hessen_schulferien_heute
+    state: "off"
+actions:
+  - action: scene.turn_on
+    target:
+      entity_id: scene.schulwecker
+mode: single
+```
+
+## Data source, license and fair use
+
+- Holiday data: **[OpenHolidays API](https://openholidaysapi.org)**, an open-data project
+  by STÜBER SYSTEMS GmbH. The data is published under the
+  [Open Database License (ODbL) 1.0](https://opendatacommons.org/licenses/odbl/1-0/)
+  ([data repository](https://github.com/openpotato/openholidaysapi.data)). It is a
+  community project, not an official government source — verify important dates with your
+  school or education ministry.
+- This integration is **not affiliated** with the OpenHolidays project.
+- **Fair use:** the service is free and has no API key. The integration makes one small
+  request per region per update interval (default once a day) plus a few requests during
+  setup. Please don't lower the interval without need.
 
 ## Contributing
 
 Contributions are welcome — bug reports, feature ideas, translations and pull requests. See
-[`CONTRIBUTING.md`](CONTRIBUTING.md) for how to set up a development environment and run the
-tests, and please open an issue on the
+[`CONTRIBUTING.md`](CONTRIBUTING.md) for the development setup, and open an issue on the
 [issue tracker](https://github.com/Jo-Highness/school_holidays/issues) first for larger
 changes.
 
 ## License
 
-Released under the **MIT** license. See [`LICENSE`](LICENSE).
-
-## Credits
-
-- Holiday data © **[openholidaysapi.org](https://openholidaysapi.org)** (open data). This
-  project is not affiliated with the API provider.
-- Built for **[Home Assistant](https://www.home-assistant.io)**.
-</content>
-</invoke>
+Released under the **MIT** license. See [`LICENSE`](LICENSE). Built for
+**[Home Assistant](https://www.home-assistant.io)**.

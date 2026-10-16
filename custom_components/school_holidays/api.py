@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import asyncio
 
-from aiohttp import ClientSession
+from aiohttp import ClientError, ClientSession
+
+from .logic import pick_name
 
 BASE = "https://openholidaysapi.org"
 TIMEOUT = 20
@@ -26,27 +28,19 @@ async def _get(session: ClientSession, path: str, params: dict) -> list[dict]:
             if resp.status != 200:
                 raise OpenHolidaysError(f"{path} -> HTTP {resp.status}")
             data = await resp.json()
-    except OpenHolidaysError:
-        raise
-    except Exception as err:
+    except (ClientError, TimeoutError, ValueError) as err:
+        # ValueError covers JSON decode errors (json.JSONDecodeError).
         raise OpenHolidaysError(f"{path} request failed: {err}") from err
     if not isinstance(data, list):
         raise OpenHolidaysError(f"{path} returned an unexpected payload")
     return data
 
 
-def _localized(names: list[dict], language: str) -> str:
-    for n in names or []:
-        if str(n.get("language", "")).upper() == language.upper():
-            return n.get("text", "")
-    return (names or [{}])[0].get("text", "") if names else ""
-
-
 async def async_get_countries(session: ClientSession, language: str = "EN") -> list[dict]:
     """Return [{'code': ISO, 'name': localized}] for the country picker."""
     data = await _get(session, "Countries", {"languageIsoCode": language.upper()})
     out = [
-        {"code": c.get("isoCode"), "name": _localized(c.get("name"), language)}
+        {"code": c.get("isoCode"), "name": pick_name(c.get("name"), language)}
         for c in data
         if c.get("isoCode")
     ]
@@ -64,7 +58,7 @@ async def async_get_subdivisions(
         {"countryIsoCode": country.upper(), "languageIsoCode": language.upper()},
     )
     out = [
-        {"code": s.get("code"), "name": _localized(s.get("name"), language)}
+        {"code": s.get("code"), "name": pick_name(s.get("name"), language)}
         for s in data
         if s.get("code")
     ]

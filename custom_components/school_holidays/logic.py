@@ -29,7 +29,22 @@ def _to_date(value) -> date | None:
     return None
 
 
-def parse_periods(raw: list[dict], language: str = "DE") -> list[Period]:
+def iso_language(language: str | None, fallback: str = "EN") -> str:
+    """Reduce an HA language tag (e.g. ``de-CH``, ``en_GB``) to an ISO 639-1 code."""
+    lang = (language or "").replace("_", "-").split("-")[0].strip().upper()
+    return lang if len(lang) == 2 and lang.isalpha() else fallback
+
+
+def pick_name(names: list[dict] | None, language: str) -> str:
+    """Text of the ``{language, text}`` entry in ``language``, else the first one."""
+    names = names or []
+    for n in names:
+        if str(n.get("language", "")).upper() == language.upper():
+            return n.get("text", "") or ""
+    return (names[0].get("text", "") or "") if names else ""
+
+
+def parse_periods(raw: list[dict], language: str = "EN") -> list[Period]:
     """Turn the openholidaysapi JSON list into sorted Period objects.
 
     Each raw item has ``startDate``, ``endDate`` and ``name`` (a list of
@@ -41,15 +56,7 @@ def parse_periods(raw: list[dict], language: str = "DE") -> list[Period]:
         end = _to_date(item.get("endDate"))
         if start is None or end is None:
             continue
-        names = item.get("name") or []
-        text = ""
-        for n in names:
-            if str(n.get("language", "")).upper() == language.upper():
-                text = n.get("text", "")
-                break
-        if not text and names:
-            text = names[0].get("text", "")
-        out.append(Period(start=start, end=end, name=text))
+        out.append(Period(start=start, end=end, name=pick_name(item.get("name"), language)))
     out.sort(key=lambda p: p.start)
     return out
 

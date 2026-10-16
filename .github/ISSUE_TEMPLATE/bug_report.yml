@@ -21,7 +21,7 @@ body:
     attributes:
       label: Integration version
       description: "Version of School Holidays (see HACS or manifest.json)"
-      placeholder: "1.0.0"
+      placeholder: "1.1.0"
     validations:
       required: true
   - type: input

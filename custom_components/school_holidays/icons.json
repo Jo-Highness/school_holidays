@@ -1,0 +1,20 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "today": {
+        "default": "mdi:school-outline"
+      },
+      "tomorrow": {
+        "default": "mdi:calendar-arrow-right"
+      }
+    },
+    "sensor": {
+      "next_holiday": {
+        "default": "mdi:calendar-star"
+      },
+      "last_successful_update": {
+        "default": "mdi:cloud-check-outline"
+      }
+    }
+  }
+}

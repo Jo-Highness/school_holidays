@@ -17,8 +17,8 @@ so you can automate around school holidays – e.g. skip the alarm, send a
 notification, or show a countdown.
 
 Country and region are picked in the UI, the update interval is configurable
-(default 12 h), and data comes from the free openholidaysapi.org (no API key).
-UI in en/de/es/fr, MIT licensed, needs HA 2024.4+.
+(default 24 h), and data comes from the free openholidaysapi.org (no API key).
+UI in en/de/es/fr, MIT licensed, needs HA 2025.2+.
 
 Honest limits: coverage depends entirely on openholidaysapi.org, so check your
 region first; and it only covers school holidays, not public holidays.

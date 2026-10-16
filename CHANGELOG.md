@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-16
+
+### Added
+
+- **Reconfigure**: change country/region of an existing entry
+  (**⋮ → Reconfigure**) without deleting it; entities and entity IDs are kept.
+- Option **Language of holiday names** with *Follow Home Assistant language*
+  (default for new entries; names are re-fetched when the HA language changes).
+- Diagnostic sensor **Last successful update** and config-entry diagnostics download.
+- Repair issue when holiday data could not be refreshed for 7 days (cached data keeps
+  working; the issue clears itself after the next successful update).
+- Descriptions for all setup/option fields (en/de/es/fr).
+
+### Fixed
+
+- *School holidays tomorrow* now exposes `holiday_name`/`start_date`/`end_date` of the
+  break covering **tomorrow** (it showed today's break before, e.g. empty on the evening
+  before the holidays).
+- API client only catches network, timeout and JSON errors instead of every exception.
+
+### Changed
+
+- Default update interval is now **24 hours** (was 12). Existing entries that set the
+  interval explicitly keep their value.
+- Minimum Home Assistant version is now **2025.2**.
+- Entries created with 1.1.0 store the language `auto`; downgrading to 1.0.x would then
+  request holiday names with an invalid language code (set an explicit language first).
+- Modernised internals: `entry.runtime_data`, coordinator bound to its config entry,
+  `icons.json`, service-type device, translated fallback device name, cleanup of dead code.
+- CI: pinned test dependencies (`requirements_test.txt`), coverage report, Dependabot for pip.
+
+### Documentation
+
+- README: quick start, language-dependent entity IDs, new examples (heating schedule,
+  alarm with Workday, template sensor, calendar), modern automation syntax, German
+  quick guide, data source/license (ODbL) and fair-use notes.
+- `docs/requirements.md` updated to v1.1.0.
+
 ## [1.0.2] - 2026-10-09
 
 ### Fixed
@@ -53,6 +91,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   when the API is briefly unreachable.
 - Translations for English, German, Spanish and French.
 
-[Unreleased]: https://github.com/Jo-Highness/school_holidays/compare/v1.0.2...HEAD
+[Unreleased]: https://github.com/Jo-Highness/school_holidays/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/Jo-Highness/school_holidays/compare/v1.0.2...v1.1.0
 [1.0.2]: https://github.com/Jo-Highness/school_holidays/compare/v1.0.1...v1.0.2
+[1.0.1]: https://github.com/Jo-Highness/school_holidays/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/Jo-Highness/school_holidays/releases/tag/v1.0.0

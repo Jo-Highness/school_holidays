@@ -84,3 +84,23 @@ def test_empty():
     assert logic.is_holiday(date(2026, 7, 29), []) is False
     assert logic.current_or_next(date(2026, 7, 29), []) is None
     assert logic.days_until(date(2026, 7, 29), None) is None
+
+
+def test_iso_language():
+    assert logic.iso_language("de-CH") == "DE"
+    assert logic.iso_language("en_GB") == "EN"
+    assert logic.iso_language("fr") == "FR"
+    assert logic.iso_language(None) == "EN"
+    assert logic.iso_language("xyz", "DE") == "DE"
+
+
+def test_pick_name():
+    names = [{"language": "DE", "text": "Herbst"}, {"language": "EN", "text": "Autumn"}]
+    assert logic.pick_name(names, "en") == "Autumn"
+    assert logic.pick_name(names, "FR") == "Herbst"  # fallback: first entry
+    assert logic.pick_name([], "EN") == ""
+    assert logic.pick_name(None, "EN") == ""
+
+
+def test_parse_periods_default_language_is_english():
+    assert logic.parse_periods(RAW)[0].name == "Summer break"
